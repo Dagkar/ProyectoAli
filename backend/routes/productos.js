@@ -6,13 +6,14 @@ import {
   actualizarProducto,
   eliminarProducto
 } from '../controllers/productoController.js'
+import { autenticar } from '../middleware/auth.js'
 
 const router = express.Router()
 
 router.get('/', obtenerProductos)
 router.get('/:id', obtenerProducto)
-router.post('/', crearProducto)
-router.put('/:id', actualizarProducto)
-router.delete('/:id', eliminarProducto)
+router.post('/crear', autenticar, crearProducto)
+router.put('/:id', autenticar, actualizarProducto)
+router.delete('/:id', autenticar, eliminarProducto)
 
 export default router

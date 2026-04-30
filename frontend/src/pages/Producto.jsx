@@ -14,10 +14,18 @@ const Producto = () => {
 
   const getImageUrl = (imagePath) => {
     if (!imagePath) return '/img/Logo.png'
-    // Cloudinary URLs se retornan directamente
+    // URLs completas (Cloudinary, Land of Assets, etc) se retornan directamente
     if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) return imagePath
     // Rutas locales antiguas se ignoran
     return '/img/Logo.png'
+  }
+
+  const getModel3dUrl = (modelPath) => {
+    if (!modelPath) return ''
+    // URLs completas (Land of Assets) se retornan directamente
+    if (modelPath.startsWith('http://') || modelPath.startsWith('https://')) return modelPath
+    // Rutas relativas se concatenan con backendUrl
+    return `${backendUrl}${modelPath}`
   }
 
   const formatNumber = (num) => {
@@ -188,7 +196,7 @@ const Producto = () => {
               {producto.modelo3d ? (
                 <>
                   <model-viewer
-                    src={`${backendUrl}${producto.modelo3d}`}
+                    src={getModel3dUrl(producto.modelo3d)}
                     alt={producto.nombre}
                     autoRotate
                     cameraControls

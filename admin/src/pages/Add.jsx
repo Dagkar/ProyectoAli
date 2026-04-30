@@ -62,11 +62,22 @@ const Add = ({ token }) => {
 
       if (imagen) formData.append('imagen', imagen)
       imagenes.forEach((img) => formData.append('imagenes', img))
-      if (modelo3d) formData.append('modelo3d', modelo3d)
+      if (modelo3d) {
+        // Validar que sea .glb o .gltf en frontend
+        const extension = modelo3d.name.split('.').pop().toLowerCase()
+        if (!['glb', 'gltf'].includes(extension)) {
+          toast.error('Solo se aceptan archivos .glb o .gltf')
+          setLoading(false)
+          return
+        }
+        formData.append('modelo3d', modelo3d)
+        toast.info('Subiendo modelo 3D a Land of Assets...')
+      }
 
       const response = await axios.post(`${API_URL}/producto/crear`, formData, {
         headers: { 
-          'x-access-token': token
+          'x-access-token': token,
+          'Content-Type': 'multipart/form-data'
         }
       })
 
@@ -86,11 +97,17 @@ const Add = ({ token }) => {
         setModelo3d(null)
         setDestaque(false)
       } else {
-        toast.error(response.data.message)
+        toast.error(response.data.message || 'Error al crear el producto')
       }
     } catch (error) {
       console.log(error)
-      toast.error(error.message)
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message)
+      } else if (error.message) {
+        toast.error(error.message)
+      } else {
+        toast.error('Error al crear el producto')
+      }
     } finally {
       setLoading(false)
     }
@@ -231,8 +248,18 @@ const Add = ({ token }) => {
         {categoria === 'pedales' && (
           <div className='form-group'>
             <label>Modelo 3D (GLB/GLTF)</label>
-            <input type='file' onChange={handleModelo3d} accept='.glb,.gltf' />
-            {modelo3d && <p className='file-name'>{modelo3d.name}</p>}
+            <input 
+              type='file' 
+              onChange={handleModelo3d} 
+              accept='.glb,.gltf'
+              disabled={loading}
+            />
+            {modelo3d && (
+              <div className='file-info'>
+                <p className='file-name'>✓ {modelo3d.name}</p>
+                <small>Tamaño: {(modelo3d.size / 1024 / 1024).toFixed(2)} MB</small>
+              </div>
+            )}
           </div>
         )}
 
