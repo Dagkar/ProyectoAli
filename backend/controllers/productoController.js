@@ -1,10 +1,12 @@
 import Producto from '../models/Producto.js'
-import { createSecretTokenInstance, uploadFile, createAsset, getFileUrl } from '@landofassets/sdk'
+import { createSecretTokenInstance, uploadFile, createAsset } from '@landofassets/sdk'
 import fs from 'fs/promises'
 
 // Función para subir archivo 3D a Land of Assets
 const subirModelo3D = async (filePath, fileName) => {
   try {
+    console.log('=== Iniciando upload a Land of Assets ===')
+    
     // Crear instancia del cliente con la API key secreta
     const client = createSecretTokenInstance({
       host: 'https://api.landofassets.com',
@@ -13,52 +15,56 @@ const subirModelo3D = async (filePath, fileName) => {
 
     // Leer el archivo
     const fileData = await fs.readFile(filePath)
+    console.log(`Archivo leído: ${fileName}, tamaño: ${fileData.length} bytes`)
     
-    // Usar valores por defecto para org y project
-    const orgName = process.env.LAND_OF_ASSETS_ORG_NAME || 'default'
-    const projectName = process.env.LAND_OF_ASSETS_PROJECT_NAME || 'productos'
+    // Usar valores de configuración
+    const orgName = process.env.LAND_OF_ASSETS_ORG_NAME
+    const projectName = process.env.LAND_OF_ASSETS_PROJECT_NAME
+
+    if (!orgName || !projectName) {
+      throw new Error(`Configuración incompleta: orgName=${orgName}, projectName=${projectName}`)
+    }
+
+    console.log(`Configuración: Org=${orgName}, Project=${projectName}`)
 
     // Paso 1: Subir el archivo
-    console.log('Subiendo archivo a Land of Assets...', { fileName, orgName, projectName })
+    console.log('Subiendo archivo...')
     const uploadToken = await uploadFile(client, {
       params: { orgName, projectName },
       fileData,
       filename: fileName
     })
-    console.log('Upload token obtenido:', uploadToken)
+    
+    console.log(`✓ Upload token obtenido`)
 
     // Paso 2: Crear el asset con el upload token
-    console.log('Creando asset en Land of Assets...')
+    console.log('Creando asset...')
+    const assetName = fileName.replace(/\.[^.]+$/, '') // Nombre sin extensión
     const asset = await createAsset(client, {
       params: { orgName, projectName },
       body: {
-        name: fileName.replace(/\.[^.]+$/, ''), // Nombre sin extensión
-        type: 'MODEL', // Tipo de asset para modelos 3D
+        name: assetName,
+        type: 'MODEL',
         uploadToken: uploadToken,
-        visibility: 'PUBLIC', // Hacer público para acceso
-        shareLicense: 'CC_BY' // Licencia de compartir
+        visibility: 'PUBLIC',
+        shareLicense: 'CC_BY'
       }
     })
-    console.log('Asset creado:', JSON.stringify(asset, null, 2))
-    console.log('Asset fileOid:', asset.fileOid)
+    
+    console.log(`✓ Asset creado: ${asset.name}`)
+    console.log(`✓ File OID: ${asset.fileOid}`)
 
-    // Validar que el fileOid sea válido
-    if (!asset.fileOid) {
-      throw new Error('El asset creado no tiene fileOid válido')
-    }
-
-    // Paso 3: Obtener URL pública del archivo
-    console.log('Obteniendo URL pública del archivo...')
-    const fileUrl = getFileUrl(client, {
-      params: { oid: asset.fileOid },
-      query: { name: fileName }
-    })
-
-    const finalUrl = fileUrl.toString()
-    console.log('Archivo subido exitosamente:', finalUrl)
-    return finalUrl
+    // Paso 3: Construir URL pública usando el fileOid y FRONTEND API KEY
+    const frontendKey = process.env.LAND_OF_ASSETS_API
+    const fileUrl = `https://api.landofassets.com/files/${asset.fileOid}?frontendToken=${frontendKey}`
+    
+    console.log(`✓ URL del archivo generada: ${fileUrl}`)
+    console.log('=== Upload completado exitosamente ===')
+    
+    return fileUrl
   } catch (error) {
-    console.error('Error completo al subir a Land of Assets:', error)
+    console.error('❌ Error al subir a Land of Assets:', error.message)
+    console.error('Detalles:', error)
     throw new Error(`Error subiendo modelo 3D: ${error.message}`)
   }
 }
