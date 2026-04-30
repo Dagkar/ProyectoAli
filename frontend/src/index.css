@@ -1,0 +1,215 @@
+/* ====== TIPOGRAFÍAS GENERALES ====== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body { 
+  margin: 0; 
+  font-family: 'Montserrat', 'Roboto', sans-serif; 
+  background-color: #fff;
+  color: #333;
+}
+
+#root {
+  width: 100%;
+}
+
+/* ====== HERO ====== */
+.hero {
+  position: relative;
+  height: 300px;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden; /* asegura que el blur no se salga */
+}
+.hero::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.25); /* oscurece un poco */
+  backdrop-filter: blur(2px);      /* aplica el blur */
+  -webkit-backdrop-filter: blur(3px); /* soporte Safari */
+  z-index: 1;
+}
+.hero-content {
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  gap: 10px;
+  position: relative; 
+  z-index: 2; /* encima del blur */
+  text-align: center;
+}
+.highlighted {
+  background: black; 
+  color: white;
+  padding: 5px 20px; 
+  font-size: 1.8rem; 
+  margin: 0;
+  border-radius: 3px;
+}
+.hero-content button {
+  background: white; 
+  color: black;
+  border: 1px solid black; 
+  padding: 10px 20px;
+  font-size: 1rem; 
+  cursor: pointer; 
+  border-radius: 5px;
+  transition: all 0.3s ease;
+}
+.hero-content button:hover { 
+  background: #ddd; 
+}
+
+/* ====== DIVISOR ====== */
+.divider { 
+  height: 30px; 
+  background: #fff; 
+}
+
+/* ====== RESEÑAS ====== */
+.reviews { 
+  padding: 40px 20px; 
+  text-align: center; 
+  overflow: hidden; 
+}
+.reviews h2 { 
+  font-size: 2rem; 
+  margin-bottom: 20px; 
+}
+.carousel { 
+  width: 100%; 
+  overflow: hidden; 
+  position: relative; 
+}
+.carousel-track { 
+  display: flex; 
+  animation: scroll 30s linear infinite; 
+}
+.review {
+  min-width: 250px; 
+  margin: 0 15px; 
+  background: #fff; 
+  border: 1px solid #ccc;
+  border-radius: 8px; 
+  padding: 20px; 
+  display: flex; 
+  flex-direction: column;
+  align-items: center; 
+  gap: 10px;
+}
+.review .highlighted { 
+  font-size: 1.2rem; 
+  padding: 5px 15px; 
+}
+.stars { 
+  font-size: 1.2rem; 
+  color: rgba(255, 217, 0, 0.9); 
+  letter-spacing: 2px; 
+}
+@keyframes scroll { 
+  0%{transform:translateX(0);} 
+  100%{transform:translateX(-50%);} 
+}
+
+/* ====== TOAST NOTIFICATIONS ====== */
+.toast {
+  position: fixed;
+  top: 80px; /* Justo debajo del header */
+  right: 20px;
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  padding: 16px 20px;
+  border-radius: 8px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 999; /* Menor que el header para que aparezca debajo */
+  transform: translateX(100%);
+  opacity: 0;
+  transition: all 0.3s ease;
+  max-width: 300px;
+  border-left: 4px solid #fff;
+}
+
+.toast.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.toast.success {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  border-left-color: #fff;
+}
+
+.toast.info {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  border-left-color: #fff;
+}
+
+.toast.warning {
+  background: linear-gradient(135deg, #ffc107, #e0a800);
+  border-left-color: #fff;
+  color: #212529;
+}
+
+.toast.error {
+  background: linear-gradient(135deg, #dc3545, #c82333);
+  border-left-color: #fff;
+  color: white;
+}
+
+.toast-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toast-icon {
+  font-size: 1.2em;
+  flex-shrink: 0;
+}
+
+.toast-message {
+  flex: 1;
+  font-size: 0.9rem;
+  line-height: 1.3;
+}
+
+@keyframes slideOut {
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* ====== FOOTER SIEMPRE ABAJO ====== */
+html, body {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+footer {
+  flex-shrink: 0; /* evita que el footer se comprima */
+}

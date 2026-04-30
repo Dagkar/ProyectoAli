@@ -1,0 +1,139 @@
+/* ====== PRODUCT ITEM ====== */
+.product-item {
+  border: 1px solid #222;
+  border-radius: 12px;
+  padding: 20px 16px 18px;
+  text-align: center;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  background: #ededed;
+  overflow: hidden;
+  position: relative;
+}
+
+.product-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12);
+}
+
+.product-link {
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px auto 14px;
+  width: 100%;
+  height: 220px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  outline: none;
+}
+
+.product-image {
+  width: 100%;
+  height: 100%;
+  max-width: 220px;
+  object-fit: contain;
+  border-radius: 0;
+  transition: transform 0.25s ease;
+  background: transparent;
+}
+
+.product-item:hover .product-image {
+  transform: scale(1.03);
+}
+
+.product-item h3 {
+  font-size: 1.12rem;
+  margin: 2px 0 10px;
+  color: #101010;
+  font-weight: 700;
+  line-height: 1.35;
+  min-height: 2.6em;
+}
+
+.product-item .producto-precio {
+  font-size: 1rem;
+  color: #ff8a00;
+  font-weight: 700;
+  margin-bottom: 16px;
+  position: static;
+  display: inline-block;
+  padding: 0;
+}
+
+.add-to-cart-btn {
+  background-color: #111;
+  color: #fff;
+  border: 1px solid #111;
+  padding: 11px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.add-to-cart-btn:hover {
+  background-color: #2b2b2b;
+  border-color: #2b2b2b;
+  color: #fff;
+}
+
+.add-to-cart-btn:active {
+  transform: scale(0.98);
+}
+
+.out-of-stock {
+  background-color: #d1d1d1;
+  border-color: #9e9e9e;
+}
+
+.out-of-stock .product-image {
+  filter: grayscale(100%);
+}
+
+.out-of-stock .producto-precio {
+  color: #8a8a8a;
+}
+
+.product-item .stock-info {
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-align: right;
+  margin: 0 2px 14px;
+  min-height: 1.3em;
+}
+
+.stock-available {
+  color: #2e7d32;
+}
+
+.stock-empty {
+  color: #4f4f4f;
+}
+
+.agotado-label {
+  background-color: transparent;
+  color: #666;
+  padding: 10px 0 0;
+  border-radius: 0;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0;
+  cursor: not-allowed;
+  width: auto;
+  box-sizing: border-box;
+  display: inline-block;
+}
+
+@media (max-width: 640px) {
+  .product-item h3 {
+    font-size: 1rem;
+  }
+
+  .product-item .producto-precio {
+    font-size: 1.55rem;
+  }
+}

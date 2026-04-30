@@ -1,0 +1,282 @@
+import React, { useContext, useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { ShopContext } from '../context/ShopContext'
+import { toast } from 'react-toastify'
+import axios from 'axios'
+import '../styles/pages.css'
+
+const Historial = () => {
+  const { token, backendUrl, products: contextProducts } = useContext(ShopContext)
+  const navigate = useNavigate()
+  const [pedidos, setPedidos] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [productos, setProductos] = useState(contextProducts || [])
+
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return '/img/Logo.png'
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) return imagePath
+    if (imagePath.startsWith('/uploads/')) return `${backendUrl}${imagePath}`
+    return imagePath
+  }
+
+  const formatNumber = (num) => {
+    if (!num) return '0'
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  }
+
+  useEffect(() => {
+    if (!token) {
+      navigate('/login')
+      return
+    }
+
+    obtenerPedidos()
+    
+    // Cargar productos si no están en contexto
+    if (!contextProducts || contextProducts.length === 0) {
+      cargarProductos()
+    }
+  }, [token])
+
+  const cargarProductos = async () => {
+    try {
+      const response = await axios.get(`${backendUrl}/api/productos`)
+      if (response.data.success) {
+        setProductos(response.data.productos || [])
+      }
+    } catch (error) {
+      console.error('Error cargando productos:', error)
+    }
+  }
+
+  const getItemData = (item) => {
+    // Si tiene snapshot, usarlo
+    if (item.nombre && item.imagen) {
+      return { nombre: item.nombre, imagen: item.imagen }
+    }
+
+    // Si no, buscar en productos por item.producto (ID)
+    const producto = productos.find(p => p._id === item.producto)
+    if (producto) {
+      return { nombre: producto.nombre, imagen: producto.imagen }
+    }
+
+    // Fallback final
+    return { nombre: 'Producto', imagen: '' }
+  }
+
+  const obtenerPedidos = async () => {
+    try {
+      setLoading(true)
+      const response = await axios.get(
+        `${backendUrl}/api/pedidos`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+
+      if (response.data.success) {
+        setPedidos(response.data.pedidos)
+      } else {
+        toast.error('Error al cargar pedidos')
+      }
+    } catch (error) {
+      console.log(error)
+      toast.error('Error al cargar el historial')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const getEstadoColor = (estado) => {
+    switch (estado) {
+      case 'pendiente':
+        return '#ff9500'
+      case 'confirmado':
+        return '#2196F3'
+      case 'enviado':
+        return '#4CAF50'
+      case 'entregado':
+        return '#8BC34A'
+      case 'cancelado':
+        return '#f44336'
+      default:
+        return '#666'
+    }
+  }
+
+  const getEstadoEtiqueta = (estado) => {
+    const etiquetas = {
+      pendiente: 'Pendiente de Confirmación',
+      confirmado: 'Confirmado',
+      enviado: 'Enviado',
+      entregado: 'Entregado',
+      cancelado: 'Cancelado'
+    }
+    return etiquetas[estado] || estado
+  }
+
+  return (
+    <div className='historial-page'>
+      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '40px 20px' }}>
+        <h1 style={{ marginBottom: '30px', color: '#333', fontSize: '2rem' }}>
+          Mis Pedidos
+        </h1>
+
+        {loading ? (
+          <p style={{ textAlign: 'center', color: '#666' }}>Cargando pedidos...</p>
+        ) : pedidos.length === 0 ? (
+          <div
+            style={{
+              textAlign: 'center',
+              padding: '60px 20px',
+              background: '#f9f9f9',
+              borderRadius: '8px'
+            }}
+          >
+            <p style={{ fontSize: '1.1rem', color: '#666', marginBottom: '20px' }}>
+              No has realizado ningún pedido aún
+            </p>
+            <button
+              onClick={() => navigate('/')}
+              style={{
+                background: '#ff8a00',
+                color: 'white',
+                border: 'none',
+                padding: '12px 30px',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                fontWeight: '600'
+              }}
+            >
+              Ir a la Tienda
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+            {pedidos.map(pedido => (
+              <div
+                key={pedido._id}
+                style={{
+                  background: 'white',
+                  border: '1px solid #ddd',
+                  borderRadius: '8px',
+                  padding: '20px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '20px',
+                    paddingBottom: '15px',
+                    borderBottom: '2px solid #eee'
+                  }}
+                >
+                  <div>
+                    <p style={{ margin: '0 0 5px 0', color: '#666', fontSize: '0.9rem' }}>
+                      Pedido #{pedido._id?.substring(0, 8).toUpperCase()}
+                    </p>
+                    <p style={{ margin: '0', color: '#333', fontWeight: '600' }}>
+                      {new Date(pedido.createdAt).toLocaleDateString('es-ES')}
+                    </p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div
+                      style={{
+                        display: 'inline-block',
+                        background: getEstadoColor(pedido.estado),
+                        color: 'white',
+                        padding: '8px 16px',
+                        borderRadius: '20px',
+                        fontSize: '0.85rem',
+                        fontWeight: '600',
+                        marginBottom: '10px'
+                      }}
+                    >
+                      {getEstadoEtiqueta(pedido.estado)}
+                    </div>
+                    <p style={{ margin: '0', color: '#333', fontWeight: '600', fontSize: '1.1rem' }}>
+                      ${formatNumber(pedido.total?.toFixed(0) || '0')}.{(pedido.total % 1).toFixed(2).split('.')[1] || '00'}
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '15px' }}>
+                  <h3 style={{ margin: '15px 0 10px 0', color: '#333', fontSize: '0.95rem' }}>
+                    Productos:
+                  </h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {pedido.items?.map((item, idx) => {
+                      const { nombre, imagen } = getItemData(item)
+                      return (
+                      <div
+                        key={idx}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          fontSize: '0.9rem',
+                          color: '#666'
+                        }}
+                      >
+                        <img
+                          src={getImageUrl(imagen)}
+                          alt={nombre}
+                          style={{
+                            width: '44px',
+                            height: '44px',
+                            objectFit: 'cover',
+                            borderRadius: '6px',
+                            border: '1px solid #e6e6e6',
+                            flexShrink: 0
+                          }}
+                        />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <span style={{ color: '#333', fontWeight: '600' }}>
+                            {nombre}
+                          </span>
+                          <span>
+                            x {item.cantidad} - ${formatNumber((item.cantidad * item.precio).toFixed(0))}.{((item.cantidad * item.precio) % 1).toFixed(2).split('.')[1]}
+                          </span>
+                        </div>
+                      </div>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    background: '#f9f9f9',
+                    padding: '12px',
+                    borderRadius: '5px',
+                    fontSize: '0.9rem',
+                    color: '#666'
+                  }}
+                >
+                  <p style={{ margin: '5px 0' }}>
+                    <strong>Envío a:</strong> {pedido.usuario?.direccion}
+                  </p>
+                  <p style={{ margin: '5px 0' }}>
+                    <strong>Contacto:</strong> {pedido.usuario?.email}
+                  </p>
+                  <p style={{ margin: '5px 0' }}>
+                    <strong>Teléfono:</strong> {pedido.usuario?.telefono}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default Historial
