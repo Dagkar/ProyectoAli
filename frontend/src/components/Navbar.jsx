@@ -33,6 +33,7 @@ const Navbar = () => {
         <Link to="/catalogo-servicios" className={`nav-link ${isActive('/catalogo-servicios') ? 'active' : ''}`}>Servicio</Link>
         <Link to="/nosotros" className={`nav-link ${isActive('/nosotros') ? 'active' : ''}`}>Nosotros</Link>
         <Link to="/catalogo-accesorios" className={`nav-link ${isActive('/catalogo-accesorios') ? 'active' : ''}`}>Accesorios</Link>
+        <Link to="/asistente" className={`nav-link ${isActive('/asistente') ? 'active' : ''}`}>Asistente</Link>
         <Link to="/ayuda" className={`nav-link ${isActive('/ayuda') ? 'active' : ''}`}>Ayuda</Link>
       </nav>
 

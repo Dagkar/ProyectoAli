@@ -54,9 +54,9 @@ const subirModelo3D = async (filePath, fileName) => {
     console.log(`✓ Asset creado: ${asset.name}`)
     console.log(`✓ File OID: ${asset.fileOid}`)
 
-    // Paso 3: Construir URL pública usando el fileOid y FRONTEND API KEY
+    // Paso 3: Construir URL pública de media 3D para que el navegador reciba el modelo directamente
     const frontendKey = process.env.LAND_OF_ASSETS_API
-    const fileUrl = `https://api.landofassets.com/files/${asset.fileOid}?frontendToken=${frontendKey}`
+    const fileUrl = `https://api.landofassets.com/media/${orgName}/${projectName}/${encodeURIComponent(asset.name)}/model/glb?frontendToken=${frontendKey}`
     
     console.log(`✓ URL del archivo generada: ${fileUrl}`)
     console.log('=== Upload completado exitosamente ===')

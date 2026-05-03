@@ -198,9 +198,9 @@ const Producto = () => {
                   <model-viewer
                     src={getModel3dUrl(producto.modelo3d)}
                     alt={producto.nombre}
-                    autoRotate
-                    cameraControls
-                    arSession
+                    auto-rotate
+                    camera-controls
+                    ar
                   ></model-viewer>
                   <div style={{ display: 'none' }} className="loading-message">
                     Cargando modelo 3D...
