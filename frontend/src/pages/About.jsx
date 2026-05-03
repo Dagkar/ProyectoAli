@@ -7,7 +7,7 @@ const About = () => {
       <section className="about-hero">
         <div className="about-content">
           <h1>Nosotros</h1>
-          <p className="lead">Somos ATONE - Tu tienda especializada en pedales de efectos y accesorios musicales de calidad</p>
+          <p className="lead">MaRAI Somos ATONE - Tu tienda especializada en pedales de efectos y accesorios musicales de calidad</p>
         </div>
       </section>
 
