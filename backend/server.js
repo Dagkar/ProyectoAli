@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import fileUpload from 'express-fileupload'
+import os from 'os'
 import 'dotenv/config'
 import connectDB from './config/mongodb.js'
 import connectCloudinary from './config/cloudinary.js'
@@ -32,7 +33,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 // Configure express-fileupload to use temp files so Cloudinary can read uploaded file paths
 app.use(fileUpload({
   useTempFiles: true,
-  tempFileDir: '/tmp/',
+  tempFileDir: os.tmpdir(),
   createParentPath: true
 }))
 app.use(cors())
