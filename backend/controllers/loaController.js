@@ -1,5 +1,4 @@
 import { createSecretTokenInstance, uploadFile, createAsset } from '@landofassets/sdk'
-import fs from 'fs/promises'
 
 export const processModel3D = async (req, res) => {
   try {
@@ -21,8 +20,8 @@ export const processModel3D = async (req, res) => {
       secretToken: process.env.LAND_OF_ASSETS_SECRET_API_KEY
     })
 
-    // Leer el archivo desde la ruta temporal
-    const fileData = await fs.readFile(modelo3d.tempFilePath)
+    // Usar el buffer directamente (funciona en local y Vercel)
+    const fileData = modelo3d.data
     console.log(`Archivo: ${modelo3d.name}, tamaño: ${fileData.length} bytes`)
 
     const orgName = process.env.LAND_OF_ASSETS_ORG_NAME
