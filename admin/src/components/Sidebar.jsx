@@ -20,6 +20,9 @@ const Sidebar = () => {
           <Link to='/users' className='sidebar-link'>
             👥 Gestión de Clientes
           </Link>
+          <Link to='/pedidos' className='sidebar-link'>
+            🧾 Pedidos Realizados
+          </Link>
         </div>
       </nav>
     </aside>

@@ -13,6 +13,7 @@ import Registro from './pages/Registro'
 import About from './pages/About'
 import FAQ from './pages/FAQ'
 import Asistente from './pages/Asistente'
+import Personalizacion from './pages/Personalizacion'
 import './index.css'
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
           <Route path="/nosotros" element={<About />} />
           <Route path="/ayuda" element={<FAQ />} />
           <Route path="/asistente" element={<Asistente />} />
+          <Route path="/personalizacion" element={<Personalizacion />} />
         </Routes>
       </div>
       <Footer />

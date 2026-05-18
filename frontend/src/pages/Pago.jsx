@@ -6,7 +6,7 @@ import axios from 'axios'
 import '../styles/pages.css'
 
 const Pago = () => {
-  const { cartItems, products, token, user, backendUrl, clearCart } = useContext(ShopContext)
+  const { cartItems, customItems, products, token, user, backendUrl, clearCart } = useContext(ShopContext)
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -39,12 +39,58 @@ const Pago = () => {
   const calcularTotal = () => {
     let total = 0
     for (const itemId in cartItems) {
-      const product = products.find(p => p._id === itemId)
+      const product = products.find(p => p._id === itemId || p.id === itemId)
       if (product) {
         total += product.precio * cartItems[itemId]
       }
     }
+    for (const itemId in customItems) {
+      const customItem = customItems[itemId]
+      total += (Number(customItem?.precio) || 0) * (customItem?.quantity || 0)
+    }
     return total
+  }
+
+
+  const buildCheckoutItems = (sourceProducts) => {
+    const normalItems = Object.keys(cartItems || {})
+      .map(id => {
+        const producto = sourceProducts.find(p => p._id === id || p.id === id)
+        if (!producto) {
+          console.warn(`Producto con ID ${id} no encontrado al recalcular checkout`)
+          return null
+        }
+        const productoId = producto._id || producto.id || id
+        return {
+          _id: productoId,
+          itemId: id,
+          nombre: producto.nombre || 'Sin nombre',
+          imagen: producto.imagen || '/img/Logo.png',
+          precio: Number(producto.precio) || 0,
+          cantidad: Number(cartItems[id]) || 1,
+          esPersonalizado: false,
+          producto: productoId
+        }
+      })
+      .filter(Boolean)
+
+    const customCheckoutItems = Object.keys(customItems || {})
+      .map(id => {
+        const customItem = customItems[id]
+        if (!customItem) return null
+        return {
+          itemId: id,
+          nombre: customItem.nombre || 'Pedido personalizado',
+          imagen: customItem.imagen || '/img/Logo.png',
+          precio: Number(customItem.precio) || 0,
+          cantidad: Number(customItem.quantity) || 1,
+          esPersonalizado: true,
+          personalizacion: customItem.personalizacion || {}
+        }
+      })
+      .filter(Boolean)
+
+    return [...normalItems, ...customCheckoutItems]
   }
 
   if (!token) {
@@ -72,15 +118,44 @@ const Pago = () => {
     )
   }
 
-  const items = Object.keys(cartItems)
-    .map(id => {
-      const producto = products.find(p => p._id === id)
-      return {
-        ...producto,
-        cantidad: cartItems[id]
-      }
-    })
-    .filter(p => p._id)
+  const items = [
+    // Items normales del carrito
+    ...Object.keys(cartItems || {})
+      .map(id => {
+        const producto = products.find(p => p._id === id || p.id === id)
+        if (!producto) {
+          console.warn(`Producto con ID ${id} no encontrado`)
+          return null
+        }
+        return {
+          _id: producto._id || producto.id || id,
+          itemId: id,
+          nombre: producto.nombre || 'Sin nombre',
+          imagen: producto.imagen || '/img/Logo.png',
+          precio: Number(producto.precio) || 0,
+          cantidad: Number(cartItems[id]) || 1,
+          esPersonalizado: false,
+          producto: producto._id || producto.id || id
+        }
+      })
+      .filter(Boolean),
+    // Items personalizados
+    ...Object.keys(customItems || {})
+      .map(id => {
+        const customItem = customItems[id]
+        if (!customItem) return null
+        return {
+          itemId: id,
+          nombre: customItem.nombre || 'Pedido personalizado',
+          imagen: customItem.imagen || '/img/Logo.png',
+          precio: Number(customItem.precio) || 0,
+          cantidad: Number(customItem.quantity) || 1,
+          esPersonalizado: true,
+          personalizacion: customItem.personalizacion || {}
+        }
+      })
+      .filter(Boolean)
+  ]
 
   const total = calcularTotal()
 
@@ -148,6 +223,16 @@ const Pago = () => {
     setLoading(true)
 
     try {
+      const productsResponse = await axios.get(`${backendUrl}/api/productos`)
+      const freshProducts = productsResponse.data.success ? (productsResponse.data.productos || []) : products
+      const checkoutItems = buildCheckoutItems(freshProducts)
+      const checkoutTotal = checkoutItems.reduce((sum, item) => sum + (Number(item.precio) || 0) * (Number(item.cantidad) || 0), 0)
+
+      if (checkoutItems.length === 0) {
+        toast.error('No hay productos v?lidos para procesar')
+        return
+      }
+
       const orderData = {
         usuario: {
           nombre: formData.nombre,
@@ -155,12 +240,30 @@ const Pago = () => {
           telefono: formData.telefono,
           direccion: formData.direccion
         },
-        items: items.map(item => ({
-          producto: item._id,
-          cantidad: item.cantidad,
-          precio: item.precio
-        })),
-        total: total,
+        items: checkoutItems.map(item => {
+          if (item.esPersonalizado) {
+            return {
+              itemId: item.itemId,
+              nombre: item.nombre,
+              imagen: '',
+              cantidad: item.cantidad,
+              precio: Number(item.precio) || 0,
+              esPersonalizado: true,
+              personalizacion: item.personalizacion || {}
+            }
+          }
+
+          return {
+            itemId: item.itemId,
+            producto: item.producto,
+            nombre: item.nombre,
+            imagen: item.imagen,
+            cantidad: item.cantidad,
+            precio: Number(item.precio),
+            esPersonalizado: false
+          }
+        }),
+        total: checkoutTotal,
         metodo_pago: formData.metodo,
         estado: 'pendiente'
       }
@@ -189,7 +292,7 @@ const Pago = () => {
       }
     } catch (error) {
       console.log(error)
-      toast.error('Error al procesar el pedido')
+      toast.error(error.response?.data?.message || 'Error al procesar el pedido')
     } finally {
       setLoading(false)
     }
@@ -224,12 +327,15 @@ const Pago = () => {
             <>
               <div className='checkout-products'>
                 {items.map(item => (
-                  <div key={item._id} className='checkout-item'>
+                  <div key={item._id || item.itemId} className='checkout-item'>
                     {item.imagen && (
                       <img src={getImageUrl(item.imagen)} alt={item.nombre} />
                     )}
                     <div className='checkout-item-details'>
                       <h4>{item.nombre}</h4>
+                      {item.esPersonalizado && (
+                        <p style={{ margin: '4px 0 0', color: '#ff8a00', fontWeight: 700 }}>Personalización</p>
+                      )}
                       <p>{item.cantidad} x ${formatMoney(item.precio)}</p>
                     </div>
                     <p className='checkout-item-total'>

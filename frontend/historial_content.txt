@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
+﻿import React, { useContext, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ShopContext } from '../context/ShopContext'
 import { toast } from 'react-toastify'
@@ -32,7 +32,7 @@ const Historial = () => {
 
     obtenerPedidos()
     
-    // Cargar productos si no están en contexto
+    // Cargar productos si no estÃ¡n en contexto
     if (!contextProducts || contextProducts.length === 0) {
       cargarProductos()
     }
@@ -120,7 +120,7 @@ const Historial = () => {
 
   const getEstadoEtiqueta = (estado) => {
     const etiquetas = {
-      pendiente: 'Pendiente de Confirmación',
+      pendiente: 'Pendiente de ConfirmaciÃ³n',
       confirmado: 'Confirmado',
       enviado: 'Enviado',
       entregado: 'Entregado',
@@ -149,7 +149,7 @@ const Historial = () => {
             }}
           >
             <p style={{ fontSize: '1.1rem', color: '#666', marginBottom: '20px' }}>
-              No has realizado ningún pedido aún
+              No has realizado ningÃºn pedido aÃºn
             </p>
             <button
               onClick={() => navigate('/')}
@@ -178,7 +178,8 @@ const Historial = () => {
               const displayEstado = esElegiblePagado ? 'pagado' : pedido.estado
               const displayColor = esElegiblePagado ? getEstadoColor('pagado') : getEstadoColor(pedido.estado)
 
-              return <div
+              return (
+              <div
                 key={pedido._id}
                 style={{
                   background: 'white',
@@ -295,13 +296,13 @@ const Historial = () => {
                   }}
                 >
                   <p style={{ margin: '5px 0' }}>
-                    <strong>Envío a:</strong> {pedido.usuario?.direccion}
+                    <strong>EnvÃ­o a:</strong> {pedido.usuario?.direccion}
                   </p>
                   <p style={{ margin: '5px 0' }}>
                     <strong>Contacto:</strong> {pedido.usuario?.email}
                   </p>
                   <p style={{ margin: '5px 0' }}>
-                    <strong>Teléfono:</strong> {pedido.usuario?.telefono}
+                    <strong>TelÃ©fono:</strong> {pedido.usuario?.telefono}
                   </p>
                 </div>
               </div>

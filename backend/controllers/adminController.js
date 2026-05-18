@@ -2,6 +2,7 @@ import { v2 as cloudinary } from 'cloudinary'
 import { createSecretTokenInstance, uploadFile, createAsset } from '@landofassets/sdk'
 import Producto from '../models/Producto.js'
 import Usuario from '../models/Usuario.js'
+import Pedido from '../models/Pedido.js'
 import bcrypt from 'bcrypt'
 import fs from 'fs/promises'
 
@@ -390,6 +391,24 @@ export const cambiarContrasenaUsuario = async (req, res) => {
     res.json({
       success: true,
       message: 'Contraseña actualizada exitosamente'
+    })
+  } catch (error) {
+    console.log(error)
+    res.json({
+      success: false,
+      message: error.message
+    })
+  }
+}
+
+// Obtener todos los pedidos para administración
+export const obtenerPedidosAdmin = async (req, res) => {
+  try {
+    const pedidos = await Pedido.find().sort({ createdAt: -1 })
+
+    res.json({
+      success: true,
+      pedidos
     })
   } catch (error) {
     console.log(error)

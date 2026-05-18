@@ -6,8 +6,10 @@ import {
   eliminarProducto,
   obtenerUsuarios,
   eliminarUsuario,
-  cambiarContrasenaUsuario
+  cambiarContrasenaUsuario,
+  obtenerPedidosAdmin
 } from '../controllers/adminController.js'
+import { actualizarEstadoPedidoAdmin } from '../controllers/pedidoController.js'
 import { autenticar } from '../middleware/auth.js'
 
 const router = express.Router()
@@ -22,5 +24,9 @@ router.delete('/producto/:id', autenticar, eliminarProducto)
 router.get('/usuarios', autenticar, obtenerUsuarios)
 router.delete('/usuario/:id', autenticar, eliminarUsuario)
 router.put('/usuario/:id/cambiar-password', autenticar, cambiarContrasenaUsuario)
+
+// Rutas de admin para pedidos
+router.get('/pedidos', autenticar, obtenerPedidosAdmin)
+router.put('/pedidos/:id/estado', autenticar, actualizarEstadoPedidoAdmin)
 
 export default router

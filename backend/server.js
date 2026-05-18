@@ -7,6 +7,7 @@ import connectCloudinary from './config/cloudinary.js'
 import authRoutes from './routes/auth.js'
 import productosRoutes from './routes/productos.js'
 import pedidosRoutes from './routes/pedidos.js'
+import uploadsRoutes from './routes/uploads.js'
 import adminRoutes from './routes/admin.js'
 import {
   obtenerUsuarios,
@@ -26,8 +27,8 @@ connectDB()
 connectCloudinary()
 
 // Middlewares
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+app.use(express.json({ limit: '10mb' }))
+app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 // Configure express-fileupload to use temp files so Cloudinary can read uploaded file paths
 app.use(fileUpload({
   useTempFiles: true,
@@ -42,6 +43,7 @@ app.use('/uploads', express.static('uploads'))
 // API endpoints
 app.use('/api/auth', authRoutes)
 app.use('/api/productos', productosRoutes)
+app.use('/api/uploads', uploadsRoutes)
 app.use('/api/pedidos', pedidosRoutes)
 app.use('/api/admin', adminRoutes)
 
@@ -55,6 +57,6 @@ app.get('/', (req, res) => {
   res.send("API Working")
 })
 
-  app.listen(port, () => console.log('Server started on PORT : ' + port))
+app.listen(port, () => console.log('Server started on PORT : ' + port))
 
 

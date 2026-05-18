@@ -1,30 +1,9 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import '../styles/pages.css'
 
 const EMBED_CONTAINER_ID = 'bp-embedded-webchat'
-const BOTPRESS_INJECT_SRC = 'https://cdn.botpress.cloud/webchat/v3.6/inject.js'
-const BOTPRESS_BOT_SRC = 'https://files.bpcontent.cloud/2026/04/30/08/20260430080039-TDRP6TRK.js'
 
 const Asistente = () => {
-  useEffect(() => {
-    let injectScript = document.getElementById('bp-webchat-inject')
-    if (!injectScript) {
-      injectScript = document.createElement('script')
-      injectScript.id = 'bp-webchat-inject'
-      injectScript.src = BOTPRESS_INJECT_SRC
-      document.body.appendChild(injectScript)
-    }
-
-    let botScript = document.getElementById('bp-webchat-bot')
-    if (!botScript) {
-      botScript = document.createElement('script')
-      botScript.id = 'bp-webchat-bot'
-      botScript.src = BOTPRESS_BOT_SRC
-      botScript.defer = true
-      document.body.appendChild(botScript)
-    }
-  }, [])
-
   return (
     <div className="asistente-page">
       <section className="atone-banner atone-banner--full">

@@ -7,6 +7,7 @@ import Add from './pages/Add'
 import List from './pages/List'
 import Edit from './pages/Edit'
 import Users from './pages/Users'
+import Pedidos from './pages/Pedidos'
 import './styles/admin.css'
 
 export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
@@ -34,6 +35,7 @@ const App = () => {
                 <Route path='/list' element={<List token={token} />} />
                 <Route path='/edit/:id' element={<Edit token={token} />} />
                 <Route path='/users' element={<Users token={token} />} />
+                <Route path='/pedidos' element={<Pedidos token={token} />} />
               </Routes>
             </div>
           </div>

@@ -29,6 +29,7 @@ out
 .vscode/
 .idea/
 *.code-workspace
+.venv
 
 # OS
 Thumbs.db

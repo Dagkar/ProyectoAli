@@ -13,9 +13,17 @@ const pedidoSchema = new mongoose.Schema({
     direccion: String
   },
   items: [{
+    itemId: {
+      type: String,
+      default: ''
+    },
     producto: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Producto'
+    },
+    esPersonalizado: {
+      type: Boolean,
+      default: false
     },
     nombre: {
       type: String,
@@ -32,6 +40,53 @@ const pedidoSchema = new mongoose.Schema({
     precio: {
       type: Number,
       required: true
+    },
+    personalizacion: {
+      tipoPedal: {
+        type: String,
+        default: ''
+      },
+      estiloSonido: [{
+        type: String
+      }],
+      referenciaSonido: {
+        type: String,
+        default: ''
+      },
+      enclosureColor: {
+        type: String,
+        default: ''
+      },
+      knobColor: {
+        type: String,
+        default: ''
+      },
+      ledColor: {
+        type: String,
+        default: ''
+      },
+      nombrePedal: {
+        type: String,
+        default: ''
+      },
+      complejidad: {
+        type: String,
+        default: ''
+      },
+      controles: [{
+        type: String
+      }],
+      usoPrincipal: [{
+        type: String
+      }],
+      descripcionUso: {
+        type: String,
+        default: ''
+      },
+      referenciaArchivo: {
+        type: String,
+        default: ''
+      }
     }
   }],
   total: {
@@ -45,7 +100,7 @@ const pedidoSchema = new mongoose.Schema({
   },
   estado: {
     type: String,
-    enum: ['pendiente', 'confirmado', 'enviado', 'entregado', 'cancelado'],
+    enum: ['pendiente', 'pagado', 'confirmado', 'enviado', 'entregado', 'cancelado'],
     default: 'pendiente'
   },
   createdAt: {

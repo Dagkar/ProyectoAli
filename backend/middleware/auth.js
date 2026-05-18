@@ -5,7 +5,7 @@ const verificarToken = async (req, res, next) => {
     const token = req.headers['authorization']?.split(' ')[1] || req.headers['token']
 
     if (!token) {
-      return res.json({ success: false, message: 'Token no encontrado, inicia sesión' })
+      return res.status(401).json({ success: false, message: 'Token no encontrado, inicia sesiÃ³n' })
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
@@ -13,7 +13,7 @@ const verificarToken = async (req, res, next) => {
     next()
   } catch (error) {
     console.error('Error en verificarToken:', error)
-    return res.json({ success: false, message: 'Token inválido o expirado' })
+    return res.status(401).json({ success: false, message: 'Token invÃ¡lido o expirado' })
   }
 }
 
@@ -23,19 +23,19 @@ export const autenticar = async (req, res, next) => {
     const token = req.headers['x-access-token'] || req.headers['authorization']?.split(' ')[1]
 
     if (!token) {
-      return res.json({ success: false, message: 'Token de admin requerido' })
+      return res.status(401).json({ success: false, message: 'Token de admin requerido' })
     }
 
-    // Validar que el token sea de admin (simple validación)
+    // Validar que el token sea de admin (simple validaciÃ³n)
     if (!token.startsWith('admin-token-')) {
-      return res.json({ success: false, message: 'Token inválido' })
+      return res.status(403).json({ success: false, message: 'Token invÃ¡lido' })
     }
 
     req.adminToken = token
     next()
   } catch (error) {
     console.error('Error en autenticar:', error)
-    return res.json({ success: false, message: 'No autorizado' })
+    return res.status(401).json({ success: false, message: 'No autorizado' })
   }
 }
 
