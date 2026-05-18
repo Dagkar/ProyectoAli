@@ -1,6 +1,7 @@
 import express from 'express'
 import {
   crearProducto,
+  prepararSubidaModelo3D,
   obtenerProductos,
   actualizarProducto,
   eliminarProducto,
@@ -15,6 +16,7 @@ import { autenticar } from '../middleware/auth.js'
 const router = express.Router()
 
 // Rutas de admin para productos
+router.post('/modelo3d/prepare-upload', autenticar, prepararSubidaModelo3D)
 router.post('/producto/crear', autenticar, crearProducto)
 router.get('/productos', autenticar, obtenerProductos)
 router.put('/producto/:id', autenticar, actualizarProducto)

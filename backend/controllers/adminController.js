@@ -1,10 +1,90 @@
 import { v2 as cloudinary } from 'cloudinary'
-import { createSecretTokenInstance, uploadFile, createAsset } from '@landofassets/sdk'
+import { createSecretTokenInstance, uploadFile, createAsset, prepareAssetUpload } from '@landofassets/sdk'
 import Producto from '../models/Producto.js'
 import Usuario from '../models/Usuario.js'
 import Pedido from '../models/Pedido.js'
 import bcrypt from 'bcrypt'
 import fs from 'fs/promises'
+
+const normalizarAssetName = (fileName) => {
+  const rawAssetName = fileName.replace(/\.[^.]+$/, '')
+  const normalizedAssetName = rawAssetName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  const assetNameBase = /^[a-z]/.test(normalizedAssetName)
+    ? normalizedAssetName
+    : `model-${normalizedAssetName || 'file'}`
+  return `${assetNameBase}-${Date.now()}`
+}
+
+const crearClienteLoa = () => createSecretTokenInstance({
+  host: 'https://api.landofassets.com',
+  secretToken: process.env.LAND_OF_ASSETS_SECRET_API_KEY
+})
+
+const crearAssetDesdeUploadToken = async (uploadToken, assetName) => {
+  const orgName = process.env.LAND_OF_ASSETS_ORG_NAME
+  const projectName = process.env.LAND_OF_ASSETS_PROJECT_NAME
+
+  if (!orgName || !projectName) {
+    throw new Error(`Configuración incompleta: orgName=${orgName}, projectName=${projectName}`)
+  }
+
+  const client = crearClienteLoa()
+  const asset = await createAsset(client, {
+    params: { orgName, projectName },
+    body: {
+      name: assetName,
+      type: 'MODEL',
+      uploadToken,
+      visibility: 'PUBLIC',
+      shareLicense: 'CC_BY'
+    }
+  })
+
+  const frontendKey = process.env.LAND_OF_ASSETS_API
+  return `https://api.landofassets.com/files/${asset.fileOid}?frontendToken=${frontendKey}`
+}
+
+export const prepararSubidaModelo3D = async (req, res) => {
+  try {
+    const { filename, size, contentType } = req.body
+
+    if (!filename || !size) {
+      return res.json({ success: false, message: 'filename y size son requeridos' })
+    }
+
+    const extension = filename.substring(filename.lastIndexOf('.')).toLowerCase()
+    if (!['.glb', '.gltf'].includes(extension)) {
+      return res.json({ success: false, message: 'Solo se aceptan archivos .glb o .gltf' })
+    }
+
+    const orgName = process.env.LAND_OF_ASSETS_ORG_NAME
+    const projectName = process.env.LAND_OF_ASSETS_PROJECT_NAME
+    const client = crearClienteLoa()
+
+    const prepared = await prepareAssetUpload(client, {
+      params: { orgName, projectName },
+      body: {
+        filename,
+        contentType: contentType || 'model/gltf-binary',
+        size: Number(size)
+      }
+    })
+
+    const assetName = normalizarAssetName(filename)
+    return res.json({
+      success: true,
+      uploadUrl: prepared.uploadUrl,
+      uploadToken: prepared.uploadToken,
+      assetName
+    })
+  } catch (error) {
+    console.error('Error preparando subida 3D:', error)
+    return res.json({ success: false, message: error.message })
+  }
+}
 
 // Función para subir archivo 3D a Land of Assets
 const subirModelo3D = async (filePath, fileName) => {
@@ -42,34 +122,10 @@ const subirModelo3D = async (filePath, fileName) => {
     
     console.log(`✓ Upload token obtenido`)
 
-    // Paso 2: Crear el asset con el upload token
+    // Paso 2: Crear asset y construir URL pública
     console.log('Creando asset...')
-    const rawAssetName = fileName.replace(/\.[^.]+$/, '')
-    const normalizedAssetName = rawAssetName
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-    const assetNameBase = /^[a-z]/.test(normalizedAssetName)
-      ? normalizedAssetName
-      : `model-${normalizedAssetName || 'file'}`
-    const assetName = `${assetNameBase}-${Date.now()}`
-    const asset = await createAsset(client, {
-      params: { orgName, projectName },
-      body: {
-        name: assetName,
-        type: 'MODEL',
-        uploadToken: uploadToken,
-        visibility: 'PUBLIC',
-        shareLicense: 'CC_BY'
-      }
-    })
-    
-    console.log(`✓ Asset creado: ${asset.name}`)
-    console.log(`✓ File OID: ${asset.fileOid}`)
-
-    // Paso 3: Construir URL pública de media 3D para que el navegador reciba el modelo directamente
-    const frontendKey = process.env.LAND_OF_ASSETS_API
-    const fileUrl = `https://api.landofassets.com/media/${orgName}/${projectName}/${encodeURIComponent(asset.name)}/model/glb?frontendToken=${frontendKey}`
+    const assetName = normalizarAssetName(fileName)
+    const fileUrl = await crearAssetDesdeUploadToken(uploadToken, assetName)
     
     console.log(`✓ URL del archivo generada: ${fileUrl}`)
     console.log('=== Upload completado exitosamente ===')
@@ -127,8 +183,16 @@ export const crearProducto = async (req, res) => {
       }
     }
 
-    // Procesar modelo 3D con Land of Assets (permite archivos .glb, .gltf, etc)
-    if (req.files?.modelo3d) {
+    // Flujo recomendado para producción (Vercel): upload directo a storage + finalize en backend
+    if (req.body?.modelo3dUploadToken && req.body?.modelo3dAssetName) {
+      modelo3dUrl = await crearAssetDesdeUploadToken(
+        req.body.modelo3dUploadToken,
+        req.body.modelo3dAssetName
+      )
+    }
+
+    // Fallback local/legacy: subir archivo desde backend
+    if (!modelo3dUrl && req.files?.modelo3d) {
       const file = req.files.modelo3d
       
       // Validar que sea un archivo .glb o .gltf

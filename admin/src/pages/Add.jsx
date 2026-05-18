@@ -62,7 +62,7 @@ const Add = ({ token }) => {
       if (imagen) formData.append('imagen', imagen)
       imagenes.forEach((img) => formData.append('imagenes', img))
       
-      // Validar y incluir modelo 3D
+      // Evitar 413 en Vercel: upload directo del modelo 3D al storage de LOA
       if (modelo3d) {
         const ext = modelo3d.name.split('.').pop().toLowerCase()
         if (!['glb', 'gltf'].includes(ext)) {
@@ -70,8 +70,37 @@ const Add = ({ token }) => {
           setLoading(false)
           return
         }
-        formData.append('modelo3d', modelo3d)
+
+        const prepResponse = await axios.post(
+          `${API_URL}/modelo3d/prepare-upload`,
+          {
+            filename: modelo3d.name,
+            size: modelo3d.size,
+            contentType: modelo3d.type || 'model/gltf-binary'
+          },
+          {
+            headers: {
+              'x-access-token': token
+            }
+          }
+        )
+
+        if (!prepResponse.data.success) {
+          toast.error(prepResponse.data.message || 'No se pudo preparar la subida del modelo 3D')
+          setLoading(false)
+          return
+        }
+
         toast.info('Subiendo modelo 3D a Land of Assets...')
+
+        await axios.put(prepResponse.data.uploadUrl, modelo3d, {
+          headers: {
+            'Content-Type': modelo3d.type || 'model/gltf-binary'
+          }
+        })
+
+        formData.append('modelo3dUploadToken', prepResponse.data.uploadToken)
+        formData.append('modelo3dAssetName', prepResponse.data.assetName)
       }
 
       const response = await axios.post(`${API_URL}/producto/crear`, formData, {
