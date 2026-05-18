@@ -117,12 +117,21 @@ export const crearProducto = async (req, res) => {
       stock, 
       estiloDeSonido,
       tipoDeMusico,
-      destaque
+      destaque,
+      modelo3dUrl
     } = req.body
 
     // Validar campos requeridos
     if (!nombre || !precio) {
       return res.json({ success: false, message: 'Nombre y precio son requeridos' })
+    }
+
+    // Convertir a números
+    const precioNum = parseFloat(precio)
+    const stockNum = parseInt(stock) || 0
+
+    if (isNaN(precioNum) || precioNum <= 0) {
+      return res.json({ success: false, message: 'Precio debe ser un número mayor a 0' })
     }
 
     // Procesar imagen principal
@@ -135,7 +144,7 @@ export const crearProducto = async (req, res) => {
     }
 
     // Procesar múltiples imágenes
-    let imagenesUrls = []
+    let imagenesUrl_final = 
     if (req.files && req.files.imagenes) {
       const imagenes = Array.isArray(req.files.imagenes) 
         ? req.files.imagenes 
@@ -161,12 +170,12 @@ export const crearProducto = async (req, res) => {
       nombre,
       descripcion,
       caracteristicas: caracteristicasArray,
-      precio,
+      precio: precioNum,
       imagen: imagenUrl,
       imagenes: imagenesUrls,
-      modelo3d: modelo3dUrl,
+      modelo3d: modelo3dUrl_final,
       categoria,
-      stock: stock || 0,
+      stock: stockNum,
       estiloDeSonido,
       tipoDeMusico,
       destaque: destaque === 'true' || destaque === true
