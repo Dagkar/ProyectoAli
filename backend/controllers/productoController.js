@@ -3,7 +3,7 @@ import { createSecretTokenInstance, uploadFile, createAsset } from '@landofasset
 import fs from 'fs/promises'
 
 // Función para subir archivo 3D a Land of Assets
-const subirModelo3D = async (filePath, fileName) => {
+const subirModelo3D = async (fileBuffer, fileName) => {
   try {
     console.log('=== Iniciando upload a Land of Assets ===')
     
@@ -13,9 +13,9 @@ const subirModelo3D = async (filePath, fileName) => {
       secretToken: process.env.LAND_OF_ASSETS_SECRET_API_KEY
     })
 
-    // Leer el archivo
-    const fileData = await fs.readFile(filePath)
-    console.log(`Archivo leído: ${fileName}, tamaño: ${fileData.length} bytes`)
+    // Usar el buffer directamente (funciona mejor en serverless)
+    const fileData = fileBuffer
+    console.log(`Archivo recibido: ${fileName}, tamaño: ${fileData.length} bytes`)
     
     // Usar valores de configuración
     const orgName = process.env.LAND_OF_ASSETS_ORG_NAME
@@ -159,8 +159,8 @@ export const crearProducto = async (req, res) => {
         })
       }
 
-      // Subir a Land of Assets
-      modelo3dUrl = await subirModelo3D(modelo3d.tempFilePath, modelo3d.name)
+      // Subir a Land of Assets con el buffer directamente (mejor para serverless)
+      modelo3dUrl = await subirModelo3D(modelo3d.data, modelo3d.name)
     }
 
     // Procesar características
