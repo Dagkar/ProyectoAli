@@ -17,8 +17,9 @@ const subirModelo3D = async (filePath, fileName) => {
       secretToken: process.env.LAND_OF_ASSETS_SECRET_API_KEY
     })
 
-    // Leer el archivo
-    const fileData = await fs.readFile(filePath)
+    // Leer el archivo y convertir a Uint8Array para compatibilidad con el SDK
+    const fileBuffer = await fs.readFile(filePath)
+    const fileData = new Uint8Array(fileBuffer)
     console.log(`Archivo leído: ${fileName}, tamaño: ${fileData.length} bytes`)
     
     // Usar valores de configuración
@@ -43,7 +44,15 @@ const subirModelo3D = async (filePath, fileName) => {
 
     // Paso 2: Crear el asset con el upload token
     console.log('Creando asset...')
-    const assetName = fileName.replace(/\.[^.]+$/, '') // Nombre sin extensión
+    const rawAssetName = fileName.replace(/\.[^.]+$/, '')
+    const normalizedAssetName = rawAssetName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+    const assetNameBase = /^[a-z]/.test(normalizedAssetName)
+      ? normalizedAssetName
+      : `model-${normalizedAssetName || 'file'}`
+    const assetName = `${assetNameBase}-${Date.now()}`
     const asset = await createAsset(client, {
       params: { orgName, projectName },
       body: {

@@ -30,7 +30,7 @@ connectCloudinary()
 // Middlewares
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
-// Configure express-fileupload to use temp files so Cloudinary can read uploaded file paths
+// Configure express-fileupload to use temp files
 app.use(fileUpload({
   useTempFiles: true,
   tempFileDir: os.tmpdir(),

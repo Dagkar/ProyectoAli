@@ -51,7 +51,6 @@ const Add = ({ token }) => {
       const formData = new FormData()
       formData.append('nombre', nombre)
       formData.append('descripcion', descripcion)
-      // send caracteristicas without accent to backend
       formData.append('caracteristicas', JSON.stringify(características))
       formData.append('stock', String(stock))
       formData.append('precio', precio)
@@ -62,10 +61,11 @@ const Add = ({ token }) => {
 
       if (imagen) formData.append('imagen', imagen)
       imagenes.forEach((img) => formData.append('imagenes', img))
+      
+      // Validar y incluir modelo 3D
       if (modelo3d) {
-        // Validar que sea .glb o .gltf en frontend
-        const extension = modelo3d.name.split('.').pop().toLowerCase()
-        if (!['glb', 'gltf'].includes(extension)) {
+        const ext = modelo3d.name.split('.').pop().toLowerCase()
+        if (!['glb', 'gltf'].includes(ext)) {
           toast.error('Solo se aceptan archivos .glb o .gltf')
           setLoading(false)
           return

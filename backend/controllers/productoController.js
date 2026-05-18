@@ -3,7 +3,7 @@ import { createSecretTokenInstance, uploadFile, createAsset } from '@landofasset
 import fs from 'fs/promises'
 
 // Función para subir archivo 3D a Land of Assets
-const subirModelo3D = async (fileBuffer, fileName) => {
+const subirModelo3D = async (filePath, fileName) => {
   try {
     console.log('=== Iniciando upload a Land of Assets ===')
     
@@ -13,9 +13,10 @@ const subirModelo3D = async (fileBuffer, fileName) => {
       secretToken: process.env.LAND_OF_ASSETS_SECRET_API_KEY
     })
 
-    // Usar el buffer directamente (funciona mejor en serverless)
-    const fileData = fileBuffer
-    console.log(`Archivo recibido: ${fileName}, tamaño: ${fileData.length} bytes`)
+    // Leer el archivo temporal y enviar su Buffer al SDK
+    const fileBuffer = await fs.readFile(filePath)
+    const fileData = new Uint8Array(fileBuffer)
+    console.log(`Archivo leído: ${fileName}, tamaño: ${fileData.length} bytes`)
     
     // Usar valores de configuración
     const orgName = process.env.LAND_OF_ASSETS_ORG_NAME
@@ -39,7 +40,14 @@ const subirModelo3D = async (fileBuffer, fileName) => {
 
     // Paso 2: Crear el asset con el upload token
     console.log('Creando asset...')
-    const assetName = fileName.replace(/\.[^.]+$/, '') // Nombre sin extensión
+    const rawAssetName = fileName.replace(/\.[^.]+$/, '')
+    const normalizedAssetName = rawAssetName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+    const assetName = /^[a-z]/.test(normalizedAssetName)
+      ? normalizedAssetName
+      : `model-${normalizedAssetName || 'file'}`
     const asset = await createAsset(client, {
       params: { orgName, projectName },
       body: {
@@ -117,8 +125,7 @@ export const crearProducto = async (req, res) => {
       stock, 
       estiloDeSonido,
       tipoDeMusico,
-      destaque,
-      modelo3dUrl
+      destaque
     } = req.body
 
     // Validar campos requeridos
@@ -138,13 +145,11 @@ export const crearProducto = async (req, res) => {
     let imagenUrl = ''
     if (req.files && req.files.imagen) {
       const imagen = req.files.imagen
-      // Aquí puedes implementar subida a Cloudinary si lo deseas
-      // Por ahora, guardamos el nombre del archivo
       imagenUrl = imagen.name
     }
 
     // Procesar múltiples imágenes
-    let imagenesUrl_final = 
+    let imagenesUrls = []
     if (req.files && req.files.imagenes) {
       const imagenes = Array.isArray(req.files.imagenes) 
         ? req.files.imagenes 
@@ -152,8 +157,25 @@ export const crearProducto = async (req, res) => {
       imagenesUrls = imagenes.map(img => img.name)
     }
 
-    // Procesar modelo 3D si viene en el body (ya fue procesado por el cliente)
-    let modelo3dUrl = req.body.modelo3dUrl || ''
+    // Procesar modelo 3D si existe
+    let modelo3dUrl = ''
+    if (req.files && req.files.modelo3d) {
+      const modelo3d = req.files.modelo3d
+      
+      // Validar extensión
+      const extensionesValidas = ['.glb', '.gltf']
+      const extension = modelo3d.name.substring(modelo3d.name.lastIndexOf('.')).toLowerCase()
+      
+      if (!extensionesValidas.includes(extension)) {
+        return res.json({ 
+          success: false, 
+          message: 'Solo se aceptan archivos .glb o .gltf' 
+        })
+      }
+
+      // Subir a Land of Assets
+      modelo3dUrl = await subirModelo3D(modelo3d.tempFilePath, modelo3d.name)
+    }
 
     // Procesar características
     let caracteristicasArray = []
@@ -173,7 +195,7 @@ export const crearProducto = async (req, res) => {
       precio: precioNum,
       imagen: imagenUrl,
       imagenes: imagenesUrls,
-      modelo3d: modelo3dUrl_final,
+      modelo3d: modelo3dUrl,
       categoria,
       stock: stockNum,
       estiloDeSonido,
