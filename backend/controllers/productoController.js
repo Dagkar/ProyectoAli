@@ -143,25 +143,8 @@ export const crearProducto = async (req, res) => {
       imagenesUrls = imagenes.map(img => img.name)
     }
 
-    // Procesar modelo 3D si existe
-    let modelo3dUrl = ''
-    if (req.files && req.files.modelo3d) {
-      const modelo3d = req.files.modelo3d
-      
-      // Validar que sea un archivo .glb o .gltf
-      const extensionesValidas = ['.glb', '.gltf']
-      const extension = modelo3d.name.substring(modelo3d.name.lastIndexOf('.')).toLowerCase()
-      
-      if (!extensionesValidas.includes(extension)) {
-        return res.json({ 
-          success: false, 
-          message: 'Solo se aceptan archivos .glb o .gltf' 
-        })
-      }
-
-      // Subir a Land of Assets con el buffer directamente (mejor para serverless)
-      modelo3dUrl = await subirModelo3D(modelo3d.data, modelo3d.name)
-    }
+    // Procesar modelo 3D si viene en el body (ya fue procesado por el cliente)
+    let modelo3dUrl = req.body.modelo3dUrl || ''
 
     // Procesar características
     let caracteristicasArray = []
