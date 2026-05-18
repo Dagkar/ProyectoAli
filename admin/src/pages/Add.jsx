@@ -48,42 +48,10 @@ const Add = ({ token }) => {
     setLoading(true)
 
     try {
-      let modelo3dUrl = ''
-
-      // Paso 1: Si hay modelo 3D, subirlo primero
-      if (modelo3d) {
-        const ext = modelo3d.name.split('.').pop().toLowerCase()
-        if (!['glb', 'gltf'].includes(ext)) {
-          toast.error('Solo se aceptan archivos .glb o .gltf')
-          setLoading(false)
-          return
-        }
-
-        toast.info('Subiendo modelo 3D a Land of Assets...')
-        const modelFormData = new FormData()
-        modelFormData.append('modelo3d', modelo3d)
-
-        const modelResp = await axios.post(`${API_URL.replace('/admin', '')}/productos/procesar-modelo`, modelFormData, {
-          headers: { 
-            'x-access-token': token,
-            'Content-Type': 'multipart/form-data'
-          }
-        })
-
-        if (!modelResp.data.success) {
-          toast.error(modelResp.data.message || 'Error al procesar modelo 3D')
-          setLoading(false)
-          return
-        }
-
-        modelo3dUrl = modelResp.data.modelo3dUrl
-        toast.success('Modelo 3D subido correctamente')
-      }
-
-      // Paso 2: Crear el producto (sin el archivo .glb)
       const formData = new FormData()
       formData.append('nombre', nombre)
       formData.append('descripcion', descripcion)
+      // send caracteristicas without accent to backend
       formData.append('caracteristicas', JSON.stringify(características))
       formData.append('stock', String(stock))
       formData.append('precio', precio)
@@ -94,9 +62,17 @@ const Add = ({ token }) => {
 
       if (imagen) formData.append('imagen', imagen)
       imagenes.forEach((img) => formData.append('imagenes', img))
-      
-      // Incluir la URL del modelo (no el archivo)
-      if (modelo3dUrl) formData.append('modelo3dUrl', modelo3dUrl)
+      if (modelo3d) {
+        // Validar que sea .glb o .gltf en frontend
+        const extension = modelo3d.name.split('.').pop().toLowerCase()
+        if (!['glb', 'gltf'].includes(extension)) {
+          toast.error('Solo se aceptan archivos .glb o .gltf')
+          setLoading(false)
+          return
+        }
+        formData.append('modelo3d', modelo3d)
+        toast.info('Subiendo modelo 3D a Land of Assets...')
+      }
 
       const response = await axios.post(`${API_URL}/producto/crear`, formData, {
         headers: { 
