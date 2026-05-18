@@ -28,6 +28,7 @@ connectDB()
 connectCloudinary()
 
 // Middlewares
+app.use(cors())
 app.use(express.json({ limit: '50mb' }))
 app.use(express.urlencoded({ extended: true, limit: '50mb' }))
 // Configure express-fileupload to use temp files
@@ -37,7 +38,6 @@ app.use(fileUpload({
   createParentPath: true,
   limits: { fileSize: 50 * 1024 * 1024 }
 }))
-app.use(cors())
 
 // Servir archivos est�ticos
 app.use('/uploads', express.static('uploads'))
